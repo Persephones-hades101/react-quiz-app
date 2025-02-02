@@ -56,6 +56,15 @@ function reducer(state, action) {
         status: "finish",
         highestScore: state.highestScore < state.points ? state.points : state.highestScore
       }
+
+    case "restart":
+      return {
+        ...state,
+        status: 'active',
+        index: 0,
+        answer: null,
+        points: 0
+      }
     default:
       throw new Error("Invalid action!")
   }
@@ -83,12 +92,28 @@ export default function App() {
         {status === 'ready' && <StartScreen numQuestions={numQuestions} dispatch={dispatch} />}
         {status === 'active' && (
           <>
-            <ProgressBar index={index} numQuestions={numQuestions} points={points} maxPoints={maxPoints} answer={answer} />
-            <Question question={questions[index]} dispatch={dispatch} answer={answer} />
-            <NextButton answer={answer} dispatch={dispatch} index={index} numQuestions={numQuestions} />
+            <ProgressBar
+              index={index}
+              numQuestions={numQuestions}
+              points={points}
+              maxPoints={maxPoints}
+              answer={answer} />
+            <Question
+              question={questions[index]}
+              dispatch={dispatch}
+              answer={answer} />
+            <NextButton
+              answer={answer}
+              dispatch={dispatch}
+              index={index}
+              numQuestions={numQuestions} />
           </>
         )}
-        {status === 'finish' && <FinishScreen points={points} maxPoints={maxPoints} highestScore={highestScore} />}
+        {status === 'finish' && <FinishScreen
+          points={points}
+          maxPoints={maxPoints}
+          highestScore={highestScore}
+          dispatch={dispatch} />}
       </Main>
     </div>
   )
