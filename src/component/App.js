@@ -1,4 +1,5 @@
 import { useEffect, useReducer } from 'react'
+
 import Header from './Header'
 import Main from './Main'
 import Loader from './Loader'
@@ -8,6 +9,12 @@ import Question from './Question'
 import NextButton from './NextButton'
 import ProgressBar from './ProgressBar'
 import FinishScreen from './FinishScreen'
+import Footer from './Footer'
+import Timer from './Timer'
+
+
+const SECS_PER_QUES = 30
+
 const initialState = {
   questions: [],
   // "loading","error","ready","active","finished"
@@ -15,7 +22,8 @@ const initialState = {
   index: 0,
   answer: null,
   points: 0,
-  highestScore: 0
+  highestScore: 0,
+  secondsRemaining: null
 }
 
 function reducer(state, action) {
@@ -32,7 +40,7 @@ function reducer(state, action) {
       }
 
     case "start":
-      return { ...state, status: "active" }
+      return { ...state, status: "active", secondsRemaining: state.questions.length * SECS_PER_QUES }
 
     case "newAnswer":
       const question = state.questions.at(state.index)
@@ -59,11 +67,18 @@ function reducer(state, action) {
 
     case "restart":
       return {
-        ...state,
+        ...initialState,
         status: 'active',
-        index: 0,
-        answer: null,
-        points: 0
+        questions: state.questions,
+        highestScore: state.highestScore,
+        secondsRemaining: state.questions.length * SECS_PER_QUES
+      }
+
+    case "tick":
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+        status: state.secondsRemaining === 0 ? 'finish' : state.status
       }
     default:
       throw new Error("Invalid action!")
@@ -71,7 +86,7 @@ function reducer(state, action) {
 }
 
 export default function App() {
-  const [{ questions, status, index, answer, points, highestScore }, dispatch] = useReducer(reducer, initialState)
+  const [{ questions, status, index, answer, points, highestScore, secondsRemaining }, dispatch] = useReducer(reducer, initialState)
 
   useEffect(function () {
     fetch("http://localhost:9000/questions")
@@ -102,11 +117,14 @@ export default function App() {
               question={questions[index]}
               dispatch={dispatch}
               answer={answer} />
-            <NextButton
-              answer={answer}
-              dispatch={dispatch}
-              index={index}
-              numQuestions={numQuestions} />
+            <Footer>
+              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+              <NextButton
+                answer={answer}
+                dispatch={dispatch}
+                index={index}
+                numQuestions={numQuestions} />
+            </Footer>
           </>
         )}
         {status === 'finish' && <FinishScreen
