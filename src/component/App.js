@@ -7,13 +7,15 @@ import StartScreen from './StartScreen'
 import Question from './Question'
 import NextButton from './NextButton'
 import ProgressBar from './ProgressBar'
+import FinishScreen from './FinishScreen'
 const initialState = {
   questions: [],
   // "loading","error","ready","active","finished"
   status: "loading",
   index: 0,
   answer: null,
-  points: 0
+  points: 0,
+  highestScore: 0
 }
 
 function reducer(state, action) {
@@ -47,13 +49,20 @@ function reducer(state, action) {
         index: state.index + 1,
         answer: null
       }
+
+    case "finish":
+      return {
+        ...state,
+        status: "finish",
+        highestScore: state.highestScore < state.points ? state.points : state.highestScore
+      }
     default:
       throw new Error("Invalid action!")
   }
 }
 
 export default function App() {
-  const [{ questions, status, index, answer, points }, dispatch] = useReducer(reducer, initialState)
+  const [{ questions, status, index, answer, points, highestScore }, dispatch] = useReducer(reducer, initialState)
 
   useEffect(function () {
     fetch("http://localhost:9000/questions")
@@ -76,9 +85,10 @@ export default function App() {
           <>
             <ProgressBar index={index} numQuestions={numQuestions} points={points} maxPoints={maxPoints} answer={answer} />
             <Question question={questions[index]} dispatch={dispatch} answer={answer} />
-            <NextButton answer={answer} dispatch={dispatch} />
+            <NextButton answer={answer} dispatch={dispatch} index={index} numQuestions={numQuestions} />
           </>
         )}
+        {status === 'finish' && <FinishScreen points={points} maxPoints={maxPoints} highestScore={highestScore} />}
       </Main>
     </div>
   )
